@@ -1,0 +1,110 @@
+[
+  {
+    "question": "What is the difference between validation and test sets?",
+    "expected_answer": "The validation set is used for hyperparameter tuning during model development. The test set is reserved for final evaluation and should not be repeatedly used, because repeated evaluation can cause data leakage.",
+    "generated_answer": "Validation set = hyperparameter tuning ke liye, training ke dauran use hota hai.  \nTest set = final evaluation, sirf ek baar use karo; baar‑baar evaluate karna data leakage hai.",
+    "retrieved_chunks": 3
+  },
+  {
+    "question": "What is the vanishing gradient problem, and how can it be reduced?",
+    "expected_answer": "The vanishing gradient problem occurs when gradients become very small during backpropagation, so early layers receive little learning signal and training becomes difficult. The material lists ReLU, batch normalization, and skip connections as ways to help address it.",
+    "generated_answer": "**Vanishing gradient problem**  \nIn very deep neural networks, during back‑propagation the gradients that are propagated back through many layers become extremely small. As a result, the early layers receive almost no update signal, which can halt or severely slow training.\n\n**How to reduce it**  \n- Use **ReLU** (or other non‑saturating) activation functions, which keep gradients from shrinking to zero.  \n- Apply **Batch Normalization**, which stabilizes the distribution of activations and helps maintain larger gradients.  \n- Incorporate **skip (residual) connections** (e.g., ResNet), which allow gradients to flow directly to earlier layers, mitigating the vanishing effect.",
+    "retrieved_chunks": 3
+  },
+  {
+    "question": "Why is ReLU often preferred over sigmoid in hidden layers?",
+    "expected_answer": "ReLU is computationally fast because it uses a max operation, produces sparse activations, and helps reduce the vanishing-gradient problem. Sigmoid squashes values into the range 0 to 1 and can have vanishing gradients.",
+    "generated_answer": "ReLU is preferred because it mitigates the vanishing‑gradient problem, is computationally cheaper (just a max operation), and produces sparse activations. In contrast, sigmoid squashes values into the 0–1 range, causing gradients to vanish and slowing training.",
+    "retrieved_chunks": 3
+  },
+  {
+    "question": "What is the purpose of dropout regularization?",
+    "expected_answer": "Dropout randomly turns off some neurons during training, encouraging the model to learn redundant representations. At test time, all neurons are enabled.",
+    "generated_answer": "Dropout regularization randomly turns off (drops) a subset of neurons during training. This forces the network to learn redundant, robust representations rather than relying on any single neuron, effectively creating an ensemble of many slightly different subnetworks. The result is reduced over‑fitting and improved generalization.",
+    "retrieved_chunks": 3
+  },
+  {
+    "question": "How does TensorFlow GradientTape work in a custom training loop?",
+    "expected_answer": "During the forward pass, operations and loss calculation are placed inside a tf.GradientTape context. The tape.gradient method calculates gradients of the loss with respect to trainable variables, and optimizer.apply_gradients applies those gradients to update the weights.",
+    "generated_answer": "In a custom training loop, TensorFlow’s **`tf.GradientTape`** is used to record the operations that compute the loss so that gradients can be automatically derived later. The typical pattern is:\n\n1. **Start a tape**  \n   ```python\n   with tf.GradientTape() as tape:\n       # Forward pass – compute predictions\n       predictions = model(inputs, training=True)\n       # Compute the loss\n       loss = loss_fn(targets, predictions)\n   ```\n\n2. **Compute gradients**  \n   After the `with` block, the tape holds the computation graph that produced `loss`.  \n   ```python\n   grads = tape.gradient(loss, model.trainable_variables)\n   ```\n\n3. **Apply gradients**  \n   The optimizer updates the model’s trainable variables using the computed gradients.  \n   ```python\n   optimizer.apply_gradients(zip(grads, model.trainable_variables))\n   ```\n\n4. **Repeat**  \n   The loop iterates over batches, repeating the above steps for each batch.\n\nKey points from the context:\n\n- `tf.GradientTape` is the TensorFlow equivalent of PyTorch’s autograd; it records operations in eager mode.\n- The tape is used inside a `with` block; once the block exits, you call `tape.gradient()` to get the gradients.\n- After obtaining gradients, you call `optimizer.apply_gradients()` (or `optimizer.step()` in PyTorch) to update the model parameters.\n- This manual loop replaces the high‑level `model.fit()` call, giving you fine‑grained control over training.",
+    "retrieved_chunks": 3
+  },
+  {
+    "question": "What are the main differences between TensorFlow/Keras and PyTorch training?",
+    "expected_answer": "Keras commonly uses model.compile() to configure training and model.fit() to run it. PyTorch commonly uses a manual training loop: calculate the loss, call loss.backward() to compute gradients, and call optimizer.step() to update weights.",
+    "generated_answer": "**Main differences in how training is done in TensorFlow/Keras vs. PyTorch**\n\n| Aspect | TensorFlow / Keras | PyTorch |\n|--------|--------------------|---------|\n| **API style** | High‑level, declarative. You build a `Model`, call `model.compile()`, and then run `model.fit()` which handles the whole training loop, loss calculation, back‑prop, optimizer step, and callbacks automatically. | Low‑level, imperative. You define a `nn.Module`, write an explicit training loop (`for epoch: for batch: loss = …; loss.backward(); optimizer.step(); optimizer.zero_grad()`), and manually control every step. |\n| **Training loop** | Hidden inside `model.fit()`. You only provide data, loss, optimizer, and callbacks. | Explicit in your code. You decide when to call `backward()`, `step()`, and `zero_grad()`. |\n| **Callbacks / hooks** | Built‑in callbacks (e.g., `ModelCheckpoint`, `EarlyStopping`, `LearningRateScheduler`) that are automatically invoked during training. | Hooks can be added, but you must implement them yourself (e.g., `torch.autograd.Function` hooks, custom callback logic). |\n| **Model saving** | `model.save()` stores the full architecture, weights, and optimizer state in a single file. | `torch.save(model.state_dict())` stores only the weights; you must recreate the architecture to load them. |\n| **Mixed‑precision training** | Available via `tf.keras.mixed_precision` API; automatically mixes FP16 and FP32 with loss‑scaling. | Available via `torch.cuda.amp.autocast` and `GradScaler`; you wrap the forward pass in `autocast()` and scale the loss manually. |\n| **Deployment / interoperability** | Models can be exported to TensorFlow Lite, SavedModel, or converted to ONNX. | Models can be exported to TorchScript or converted to ONNX. |\n| **GPU usage** | GPU support is built‑in; you just set `device` or use `tf.config`. | GPU usage is explicit: tensors and modules must be moved to `device` (`.to('cuda')`). |\n\nThese differences reflect the overall design philosophies: TensorFlow/Keras prioritizes ease of use and rapid prototyping with a high‑level API, while PyTorch emphasizes flexibility and explicit control over the training process.",
+    "retrieved_chunks": 3
+  },
+  {
+    "question": "What is the difference between model.train() and model.eval() in PyTorch?",
+    "expected_answer": "model.train() enables training behavior, including dropout and batch-statistics behavior for BatchNorm. model.eval() disables dropout and makes BatchNorm use its running statistics, so it should be used for validation and testing.",
+    "generated_answer": "",
+    "error": "Error code: 429 - {'error': {'message': 'Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kzwqnwfzeamsdbfe6vgrpbg3` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6748, Requested 1803. Please try again in 4.1325s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
+  },
+  {
+    "question": "What do convolution and max-pooling layers do in a CNN?",
+    "expected_answer": "Conv2D filters detect image features such as edges, textures, and patterns. MaxPooling2D reduces the spatial size by keeping the maximum value from each window, preserving strong features.",
+    "generated_answer": "I do not have enough information.",
+    "retrieved_chunks": 3
+  },
+  {
+    "question": "What is transfer learning?",
+    "expected_answer": "Transfer learning reuses the weights of a model trained on one task for a new task. For example, a pre-trained image model can be used as a feature extractor or fine-tuned for a new classifier.",
+    "generated_answer": "",
+    "error": "Error code: 429 - {'error': {'message': 'Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kzwqnwfzeamsdbfe6vgrpbg3` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6848, Requested 1427. Please try again in 2.0625s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
+  },
+  {
+    "question": "What is the difference between an RNN, LSTM, and GRU?",
+    "expected_answer": "RNNs process sequential data using a hidden state but can suffer from vanishing gradients on long sequences. LSTMs use forget, input, and output gates plus a cell state to manage memory. GRUs are a simpler LSTM-like alternative with two gates and fewer parameters, often with similar performance.",
+    "generated_answer": "**RNN (Recurrent Neural Network)**  \n- The basic recurrent unit that carries a hidden state from one time step to the next.  \n- No gating mechanisms – the hidden state is updated with a simple nonlinear transformation.  \n- Works well on short sequences or very simple tasks.  \n- Prone to the vanishing‑gradient problem, which limits its ability to learn long‑range dependencies.\n\n**LSTM (Long‑Short‑Term Memory)**  \n- A gated RNN that adds a *cell state* and three gates:  \n  1. **Forget gate** – decides what to discard.  \n  2. **Input gate** – decides what new information to store.  \n  3. **Output gate** – decides what to expose as the hidden state.  \n- Designed to mitigate vanishing gradients and capture long‑term dependencies (e.g., text generation).  \n- More parameters and slower to train because of the extra gates and cell state.\n\n**GRU (Gated Recurrent Unit)**  \n- A simplified version of the LSTM that uses only two gates:  \n  1. **Reset gate** – controls how much past information to forget.  \n  2. **Update gate** – blends new input with the previous hidden state.  \n- Fewer parameters than an LSTM, often achieving comparable performance on many tasks.  \n- Faster to train but may be slightly less powerful for very long sequences compared to a full LSTM.",
+    "retrieved_chunks": 3
+  },
+  {
+    "question": "What is the difference between stemming and lemmatization?",
+    "expected_answer": "Stemming is a fast, rule-based process that can produce imperfect word forms. Lemmatization is slower and uses linguistic or dictionary information to return a proper base form; for example, it can map 'better' to 'good'.",
+    "generated_answer": "",
+    "error": "Error code: 429 - {'error': {'message': 'Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kzwqnwfzeamsdbfe6vgrpbg3` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6611, Requested 1654. Please try again in 1.9875s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
+  },
+  {
+    "question": "How do TF-IDF and Word2Vec represent text differently?",
+    "expected_answer": "TF-IDF scores words based on their frequency in a document and rarity across documents, but it does not capture semantics well. Word2Vec learns dense word vectors in which words used in similar contexts can be close together.",
+    "generated_answer": "TF‑IDF and Word2Vec represent text in fundamentally different ways:\n\n| Feature | TF‑IDF | Word2Vec |\n|---------|--------|----------|\n| **Vector type** | Sparse, high‑dimensional (one dimension per vocabulary term) | Dense, low‑dimensional (fixed embedding size, e.g., 100) |\n| **Basis** | Bag‑of‑words counts weighted by inverse document frequency | Contextual co‑occurrence patterns learned from a neural network |\n| **Semantic capture** | None – words are independent; only frequency matters | Yes – similar words end up close in vector space (e.g., “king” – “man” + “woman” ≈ “queen”) |\n| **Handling of word order** | None – order is ignored | Implicitly considered through the context window during training |\n| **Out‑of‑vocabulary (OOV)** | OOV words are simply absent from the vocabulary | Handled by sub‑word models (FastText) or by the embedding lookup |\n| **Typical use** | Simple, fast classifiers (e.g., Naïve Bayes) | Tasks needing semantic similarity, word analogies, or as input to deeper models |\n\nIn short, TF‑IDF gives a sparse, frequency‑based representation, while Word2Vec provides a dense, semantics‑aware embedding.",
+    "retrieved_chunks": 3
+  },
+  {
+    "question": "What is the difference between BERT and GPT?",
+    "expected_answer": "BERT is an encoder-only, bidirectional model trained using masked-language modeling and is commonly used for tasks such as classification and named-entity recognition. GPT is decoder-only and uses next-token prediction, making it suited to text generation.",
+    "generated_answer": "BERT is an **encoder‑only** model that is trained bidirectionally with masked‑language‑modeling, making it good for understanding tasks such as classification and NER.  \nGPT is a **decoder‑only** model that is trained unidirectionally for next‑token prediction, making it suited for text generation. In short, BERT “understands” text, while GPT “generates” text.",
+    "retrieved_chunks": 3
+  },
+  {
+    "question": "What is the attention mechanism in Transformers?",
+    "expected_answer": "Attention uses queries, keys, and values. It calculates scores from queries and keys, converts them into weights, and uses those weights to combine values. In self-attention, queries, keys, and values come from the same input.",
+    "generated_answer": "The attention mechanism in Transformers is a **Query‑Key‑Value (Q‑K‑V)** system.  \n- Each token produces a **Query (Q)**, a **Key (K)**, and a **Value (V)** vector.  \n- The attention weight for a pair of tokens is computed as the dot product of their Q and K vectors, usually scaled and passed through a softmax.  \n- These weights are then used to weight the corresponding V vectors, producing a context‑aware representation for each token.  \n\nIn self‑attention, the Q, K, and V all come from the same input sequence, allowing every token to attend to every other token.",
+    "retrieved_chunks": 3
+  },
+  {
+    "question": "What is quantization and why is it useful for deploying models?",
+    "expected_answer": "Quantization stores model weights at lower numerical precision, such as converting FP32 to INT8 or FP16. It can reduce memory use and speed up inference, though it may cause some accuracy loss.",
+    "generated_answer": "Quantization is the process of storing a model’s weights (and sometimes activations) in a lower‑precision format—e.g., converting FP32 weights to INT8 or FP16. This reduces the model’s memory footprint (often by about 4×) and speeds up inference (typically 2–4× faster) with only a modest loss in accuracy. Because of these gains, quantization is especially useful when deploying models to resource‑constrained environments such as mobile devices or edge hardware.",
+    "retrieved_chunks": 3
+  },
+  {
+    "question": "What is the difference between object detection and semantic segmentation?",
+    "expected_answer": "Object detection identifies objects and returns bounding boxes around them. Semantic segmentation assigns a class label to every pixel in an image. The material lists YOLO and Faster R-CNN for object detection and U-Net and DeepLab for semantic segmentation.",
+    "generated_answer": "",
+    "error": "Error code: 429 - {'error': {'message': 'Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kzwqnwfzeamsdbfe6vgrpbg3` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6455, Requested 1566. Please try again in 157.5ms. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
+  },
+  {
+    "question": "What is data drift, and how is it monitored in production?",
+    "expected_answer": "Data drift means the input data distribution has changed. The material also recommends monitoring concept drift, latency, and error rate in production, using tools such as Prometheus, Grafana, Evidently AI, WhyLogs, and Arize.",
+    "generated_answer": "**Data drift**  \n- It occurs when the distribution of the input data that the model receives in production changes from the distribution it was trained on.  \n- When this happens the model’s predictions can become less reliable, so a retraining or adaptation step is usually required.\n\n**How it is monitored in production**  \n- Track statistical properties of the incoming data (e.g., feature means, variances, histograms, or more advanced distribution‑distance metrics).  \n- Compare these statistics to the baseline distribution from the training set.  \n- Use monitoring tools such as **Prometheus + Grafana** dashboards, or specialized ML‑monitoring platforms like **Evidently AI**, **WhyLogs**, or **Arize** to automatically detect significant shifts and alert the team.  \n\nBy continuously observing these metrics, you can detect data drift early and trigger retraining or other corrective actions.",
+    "retrieved_chunks": 3
+  },
+  {
+    "question": "What is the difference between precision and recall?",
+    "expected_answer": "Precision is TP divided by TP plus FP and measures how often positive predictions are correct. Recall is TP divided by TP plus FN and measures how many actual positives are found. F1 is the harmonic mean of precision and recall.",
+    "generated_answer": "",
+    "error": "Error code: 429 - {'error': {'message': 'Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kzwqnwfzeamsdbfe6vgrpbg3` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6633, Requested 1612. Please try again in 1.8375s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
+  }
+]
